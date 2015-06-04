@@ -61,8 +61,17 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 final City city = adapter.getItem(i);
-                Toast.makeText(MainActivity.this, "CLICK on : "+city.name, Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this, "CLICK ON : " + city.name, Toast.LENGTH_LONG).show();
 
+            }
+        });
+
+        recyclerAdapterView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
+                final City city = adapter.getItem(i);
+                Toast.makeText(MainActivity.this, "LONG CLICK ON : "+city.name, Toast.LENGTH_LONG).show();
+                return true;
             }
         });
 
