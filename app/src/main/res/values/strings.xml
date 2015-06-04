@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">RecyclerAdapterView</string>
+
+    <string-array name="cities">
+        <item>Tokyo</item>
+        <item>Rennes</item>
+        <item>Helsinki</item>
+        <item>Oslo</item>
+        <item>London</item>
+        <item>Valence</item>
+
+    </string-array>
+
+
+
+</resources>
