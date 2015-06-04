@@ -213,13 +213,12 @@ public class RecyclerAdapterView extends RecyclerView implements Observer {
             super(itemView);
             mView = itemView;
 
+            final int position = getAdapterPosition();
+            final long id = getItemId();
+
             mView.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View view) {
-
-                    final int position = getAdapterPosition();
-                    final long id = getItemId();
-
                     RecyclerEventBus.postItemClick(new RecyclerEventBus.ItemClickEvent(view, position, id));
                 }
             });
@@ -227,7 +226,7 @@ public class RecyclerAdapterView extends RecyclerView implements Observer {
             mView.setOnLongClickListener(new OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View view) {
-                    RecyclerEventBus.postItemLongClick(new RecyclerEventBus.ItemLongClickEvent());
+                    RecyclerEventBus.postItemLongClick(new RecyclerEventBus.ItemLongClickEvent(view, position, id));
                     return false;
                 }
             });
