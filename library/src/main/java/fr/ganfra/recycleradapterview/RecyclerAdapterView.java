@@ -141,7 +141,7 @@ public class RecyclerAdapterView extends RecyclerView implements Observer {
     }
 
     @Override
-    public void update(Observable observable, Object event) {
+    public final void update(Observable observable, Object event) {
         if (event instanceof RecyclerEventBus.ItemClickEvent) {
             receiveClickItemEvent((RecyclerEventBus.ItemClickEvent) event);
         } else if (event instanceof RecyclerEventBus.ItemLongClickEvent) {
@@ -164,7 +164,7 @@ public class RecyclerAdapterView extends RecyclerView implements Observer {
 
     private void receiveLongClickItemEvent(final RecyclerEventBus.ItemLongClickEvent event) {
         final RecyclerView.Adapter adapter = getAdapter();
-        if (adapter != null && mOnItemClickListener != null) {
+        if (adapter != null && mOnItemLongClickListener != null) {
 
             final View view = event.getView();
             final int position = event.getPosition();
@@ -182,7 +182,7 @@ public class RecyclerAdapterView extends RecyclerView implements Observer {
         return mOnItemClickListener;
     }
 
-    public void setOnLongItemClickListener(final AdapterView.OnItemLongClickListener listener) {
+    public void setOnItemLongClickListener(final AdapterView.OnItemLongClickListener listener) {
         if (!isLongClickable()) {
             setLongClickable(true);
         }
@@ -207,14 +207,12 @@ public class RecyclerAdapterView extends RecyclerView implements Observer {
 
     public static abstract class ViewHolder extends RecyclerView.ViewHolder {
 
-        private View mView;
 
         public ViewHolder(final View itemView) {
             super(itemView);
-            mView = itemView;
 
 
-            mView.setOnClickListener(new OnClickListener() {
+            itemView.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     final int position = getAdapterPosition();
@@ -224,14 +222,14 @@ public class RecyclerAdapterView extends RecyclerView implements Observer {
                 }
             });
 
-            mView.setOnLongClickListener(new OnLongClickListener() {
+            itemView.setOnLongClickListener(new OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View view) {
                     final int position = getAdapterPosition();
                     final long id = getItemId();
 
                     RecyclerEventBus.postItemLongClick(new RecyclerEventBus.ItemLongClickEvent(view, position, id));
-                    return false;
+                    return true;
                 }
             });
         }
