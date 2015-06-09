@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
                 final City city = adapter.getItem(i);
-                Toast.makeText(MainActivity.this, "LONG CLICK ON : "+city.name, Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this, "LONG CLICK ON : " + city.name, Toast.LENGTH_LONG).show();
                 return true;
             }
         });
@@ -120,6 +120,10 @@ public class MainActivity extends AppCompatActivity {
         public MyHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             final LayoutInflater inflater = LayoutInflater.from(mContext);
             final View view = inflater.inflate(R.layout.item_country, parent, false);
+
+            view.setBackgroundResource(R.drawable.item_transition);
+
+
             return new MyHolder(view);
         }
 

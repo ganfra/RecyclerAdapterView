@@ -7,10 +7,7 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.widget.AdapterView;
 
-import java.util.Observable;
-import java.util.Observer;
-
-public class RecyclerAdapterView extends RecyclerView implements Observer {
+public class RecyclerAdapterView extends RecyclerView {
 
     private static final String LOG_TAG = RecyclerAdapterView.class.getSimpleName();
 
@@ -128,52 +125,6 @@ public class RecyclerAdapterView extends RecyclerView implements Observer {
      */
 
 
-    @Override
-    protected void onAttachedToWindow() {
-        super.onAttachedToWindow();
-        RecyclerEventBus.register(this);
-    }
-
-    @Override
-    protected void onDetachedFromWindow() {
-        super.onDetachedFromWindow();
-        RecyclerEventBus.unregister(this);
-    }
-
-    @Override
-    public final void update(Observable observable, Object event) {
-        if (event instanceof RecyclerEventBus.ItemClickEvent) {
-            receiveClickItemEvent((RecyclerEventBus.ItemClickEvent) event);
-        } else if (event instanceof RecyclerEventBus.ItemLongClickEvent) {
-            receiveLongClickItemEvent((RecyclerEventBus.ItemLongClickEvent) event);
-        }
-    }
-
-    private void receiveClickItemEvent(final RecyclerEventBus.ItemClickEvent event) {
-
-        final RecyclerView.Adapter adapter = getAdapter();
-        if (adapter != null && mOnItemClickListener != null) {
-
-            final View view = event.getView();
-            final int position = event.getPosition();
-            final long id = event.getId();
-
-            mOnItemClickListener.onItemClick(null, view, position, id);
-        }
-    }
-
-    private void receiveLongClickItemEvent(final RecyclerEventBus.ItemLongClickEvent event) {
-        final RecyclerView.Adapter adapter = getAdapter();
-        if (adapter != null && mOnItemLongClickListener != null) {
-
-            final View view = event.getView();
-            final int position = event.getPosition();
-            final long id = event.getId();
-
-            mOnItemLongClickListener.onItemLongClick(null, view, position, id);
-        }
-    }
-
     public void setOnItemClickListener(final AdapterView.OnItemClickListener listener) {
         mOnItemClickListener = listener;
     }
@@ -203,9 +154,40 @@ public class RecyclerAdapterView extends RecyclerView implements Observer {
     public static abstract class Adapter<VH extends ViewHolder> extends RecyclerView.Adapter<VH> {
         public abstract Object getItem(int position);
 
+        private RecyclerAdapterView mRecyclerAdapterView;
+
+        @Override
+        public void onAttachedToRecyclerView(RecyclerView recyclerView) {
+            super.onAttachedToRecyclerView(recyclerView);
+            if (recyclerView instanceof RecyclerAdapterView) {
+                mRecyclerAdapterView = (RecyclerAdapterView) recyclerView;
+            }
+        }
+
+        @Override
+        public void onDetachedFromRecyclerView(RecyclerView recyclerView) {
+            super.onDetachedFromRecyclerView(recyclerView);
+            if (mRecyclerAdapterView != null) {
+                mRecyclerAdapterView = null;
+            }
+        }
+
+        @Override
+        public void onViewAttachedToWindow(VH holder) {
+            super.onViewAttachedToWindow(holder);
+            holder.mRecyclerAdapterView = mRecyclerAdapterView;
+        }
+
+        @Override
+        public void onViewDetachedFromWindow(VH holder) {
+            super.onViewDetachedFromWindow(holder);
+            holder.mRecyclerAdapterView = null;
+        }
     }
 
     public static abstract class ViewHolder extends RecyclerView.ViewHolder {
+
+        RecyclerAdapterView mRecyclerAdapterView;
 
 
         public ViewHolder(final View itemView) {
@@ -215,20 +197,30 @@ public class RecyclerAdapterView extends RecyclerView implements Observer {
             itemView.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    final int position = getAdapterPosition();
-                    final long id = getItemId();
 
-                    RecyclerEventBus.postItemClick(new RecyclerEventBus.ItemClickEvent(view, position, id));
+                    if (mRecyclerAdapterView != null) {
+                        final int position = getAdapterPosition();
+                        final long id = getItemId();
+
+                        mRecyclerAdapterView.getOnItemClickListener().onItemClick(null, view, position, id);
+
+//                        RecyclerEventBus.postItemClick(new RecyclerEventBus.ItemClickEvent(view, position, id));
+                    }
                 }
             });
 
             itemView.setOnLongClickListener(new OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View view) {
-                    final int position = getAdapterPosition();
-                    final long id = getItemId();
+                    if (mRecyclerAdapterView != null) {
+                        final int position = getAdapterPosition();
+                        final long id = getItemId();
 
-                    RecyclerEventBus.postItemLongClick(new RecyclerEventBus.ItemLongClickEvent(view, position, id));
+                        mRecyclerAdapterView.getOnItemLongClickListener().onItemLongClick(null, view, position, id);
+
+
+//                        RecyclerEventBus.postItemLongClick(new RecyclerEventBus.ItemLongClickEvent(view, position, id));
+                    }
                     return true;
                 }
             });
