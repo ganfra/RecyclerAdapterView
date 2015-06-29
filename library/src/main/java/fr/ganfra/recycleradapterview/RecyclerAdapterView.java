@@ -22,6 +22,9 @@ public class RecyclerAdapterView extends RecyclerView {
      */
     private static final String LOG_TAG = RecyclerAdapterView.class.getSimpleName();
 
+    private static final int[] ATTRS = new int[]{
+            android.R.attr.listDivider, android.R.attr.dividerHeight,
+    };
 
 
     /*
@@ -39,6 +42,9 @@ public class RecyclerAdapterView extends RecyclerView {
     private ArrayList<View> mHeaderViews = new ArrayList<>();
     private ArrayList<View> mFooterViews = new ArrayList<>();
 
+    // XML ATTRIBUTES
+    private Drawable mDivider;
+    private int mDividerHeight;
 
     /*
      * **********************************************************************************
@@ -57,9 +63,36 @@ public class RecyclerAdapterView extends RecyclerView {
         super(context, attrs, defStyle);
         mContext = context;
         setLayoutManager(new LinearLayoutManager(context));
+        initXmlAttributes(context);
+        if (mDivider != null) {
+            addItemDecoration(new DividerItemDecoration(mDivider, mDividerHeight));
+        }
+    }
+
+    private void initXmlAttributes(final Context context) {
+        TypedArray a = context.obtainStyledAttributes(ATTRS);
+        final Drawable drawable = a.getDrawable(0);
+        setDivider(drawable);
+        mDividerHeight = a.getInteger(1, mDividerHeight);
+        a.recycle();
     }
 
 
+    public void setDivider(final int res) {
+        final Drawable drawable = getContext().getResources().getDrawable(res);
+        setDivider(drawable);
+    }
+
+    public void setDivider(final Drawable divider) {
+        if (divider != null) {
+            mDivider = divider;
+            mDividerHeight = divider.getIntrinsicHeight();
+        } else {
+            mDividerHeight = 0;
+        }
+        requestLayout();
+        invalidate();
+    }
 
 
 
