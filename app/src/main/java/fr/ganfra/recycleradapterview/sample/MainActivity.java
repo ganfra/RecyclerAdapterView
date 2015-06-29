@@ -5,7 +5,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -47,15 +46,22 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         createCities();
         adapter = new MyAdapter(this);
-        createCities();
-
 
         ButterKnife.inject(this);
         setSupportActionBar(toolbar);
+
+
         recyclerAdapterView.setAdapter(adapter);
-        recyclerAdapterView.setLayoutManager(new LinearLayoutManager(this));
         recyclerAdapterView.setEmptyView(emptyView);
 
+
+        TextView header1 = new TextView(this);
+        header1.setText("HEADER 1");
+        recyclerAdapterView.addHeaderView(header1);
+
+        TextView header2 = new TextView(this);
+        header2.setText("HEADER 2");
+        recyclerAdapterView.addHeaderView(header2);
 
         recyclerAdapterView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -95,24 +101,15 @@ public class MainActivity extends AppCompatActivity {
 
 
         private Context mContext;
-        private List<City> mCityItems;
+        private List<City> mCityItems = new ArrayList<>();
 
         public MyAdapter(final Context context) {
             mContext = context;
         }
 
-        public void setData(final List<City> items) {
-            this.mCityItems = items;
-            notifyDataSetChanged();
-        }
-
         public void addData(final List<City> items) {
-            if (mCityItems == null) {
-                setData(items);
-            } else {
-                mCityItems.addAll(items);
-                notifyDataSetChanged();
-            }
+            mCityItems.addAll(items);
+            notifyDataSetChanged();
         }
 
 
@@ -120,10 +117,7 @@ public class MainActivity extends AppCompatActivity {
         public MyHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             final LayoutInflater inflater = LayoutInflater.from(mContext);
             final View view = inflater.inflate(R.layout.item_country, parent, false);
-
             view.setBackgroundResource(R.drawable.item_transition);
-
-
             return new MyHolder(view);
         }
 
@@ -167,7 +161,6 @@ public class MainActivity extends AppCompatActivity {
                 Picasso.with(context)
                         .load(city.pictureUri)
                         .into(imageView);
-
 
             }
 

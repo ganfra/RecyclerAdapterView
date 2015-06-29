@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
     <android.support.design.widget.CoordinatorLayout
         android:id="@+id/coordinatorLayout"
-        android:layout_alignParentTop="true"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
         <android.support.design.widget.AppBarLayout
             android:id="@+id/appBar"
@@ -30,6 +31,8 @@
             android:id="@+id/listView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:divider="@android:color/black"
+            android:dividerHeight="2dp"
             app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
         <TextView
@@ -40,6 +43,7 @@
             android:gravity="center"
             android:text="EMPTY" />
 
+
     </android.support.design.widget.CoordinatorLayout>
 
     <Button
@@ -47,9 +51,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_above="@id/coordinatorLayout"
-        android:layout_alignParentBottom="true"
         android:gravity="center"
         android:text="Add cities" />
 
 
-</RelativeLayout>
+</LinearLayout>
