@@ -1,15 +1,27 @@
 package fr.ganfra.recycleradapterview;
 
 import android.content.Context;
+import android.content.res.TypedArray;
+import android.graphics.drawable.Drawable;
 import android.support.annotation.Nullable;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 
+import java.util.ArrayList;
+
 public class RecyclerAdapterView extends RecyclerView {
 
+    /*
+     * **********************************************************************************
+     * CONSTANTS
+     * **********************************************************************************
+     */
     private static final String LOG_TAG = RecyclerAdapterView.class.getSimpleName();
+
 
 
     /*
@@ -22,22 +34,69 @@ public class RecyclerAdapterView extends RecyclerView {
     private AdapterView.OnItemClickListener mOnItemClickListener;
     private AdapterView.OnItemLongClickListener mOnItemLongClickListener;
 
+    private Context mContext;
+
+    private ArrayList<View> mHeaderViews = new ArrayList<>();
+    private ArrayList<View> mFooterViews = new ArrayList<>();
+
+
     /*
      * **********************************************************************************
      * CONSTRUCTORS
      * **********************************************************************************
      */
     public RecyclerAdapterView(Context context) {
-        super(context);
+        this(context, null);
     }
 
     public RecyclerAdapterView(Context context, @Nullable AttributeSet attrs) {
-        super(context, attrs);
+        this(context, attrs, 0);
     }
 
     public RecyclerAdapterView(Context context, @Nullable AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+        mContext = context;
+        setLayoutManager(new LinearLayoutManager(context));
     }
+
+
+
+
+
+    /*
+     * **********************************************************************************
+     * COMMONS FEATURES
+     * **********************************************************************************
+     */
+
+    @Override
+    public void setAdapter(RecyclerView.Adapter adapter) {
+        unregisterDataObservers(adapter);
+        try {
+            adapter = wrapAdapterIfNeeded((RecyclerAdapterView.Adapter) adapter);
+        } catch (ClassCastException e) {
+            Log.v(LOG_TAG, "Your adapter must extends RecyclerAdapterView.Adapter instead of RecyclerView.Adapter");
+        }
+        super.setAdapter(adapter);
+        if (adapter != null) {
+            adapter.registerAdapterDataObserver(mAdapterDataObserver);
+            checkIfEmpty();
+        }
+    }
+
+
+    private void unregisterDataObservers(final RecyclerView.Adapter newAdapter) {
+        final RecyclerView.Adapter currentAdapter = getAdapter();
+
+        if (currentAdapter != null && newAdapter != null) {
+            currentAdapter.unregisterAdapterDataObserver(mAdapterDataObserver);
+            if (currentAdapter instanceof FixedViewRecyclerAdapter && !(newAdapter instanceof FixedViewRecyclerAdapter)) {
+                ((FixedViewRecyclerAdapter) currentAdapter).unregisterWrapperDataObserver();
+            }
+        }
+    }
+
+
 
     /*
      * **********************************************************************************
@@ -76,22 +135,6 @@ public class RecyclerAdapterView extends RecyclerView {
             checkIfEmpty();
         }
     };
-
-    @Override
-    public void setAdapter(RecyclerView.Adapter adapter) {
-
-        if (getAdapter() != null) {
-            getAdapter().unregisterAdapterDataObserver(mAdapterDataObserver);
-        }
-
-        super.setAdapter(adapter);
-        if (adapter != null) {
-            adapter.registerAdapterDataObserver(mAdapterDataObserver);
-            checkIfEmpty();
-        }
-
-    }
-
 
     public void setEmptyView(final View view) {
         mEmptyView = view;
@@ -144,6 +187,78 @@ public class RecyclerAdapterView extends RecyclerView {
         return mOnItemLongClickListener;
     }
 
+    /*
+     * **********************************************************************************
+     * HEADER AND FOOTER VIEWS
+     * **********************************************************************************
+     */
+
+    public int getHeaderCount() {
+        return mHeaderViews.size();
+    }
+
+    public int getFooterCount() {
+        return mFooterViews.size();
+    }
+
+    public void addFooterView(final View view) {
+        addFixedView(view, mFooterViews);
+    }
+
+    public void addHeaderView(final View view) {
+        addFixedView(view, mHeaderViews);
+    }
+
+    private void addFixedView(final View view, final ArrayList<View> fixedViews) {
+        RecyclerAdapterView.Adapter adapter = (RecyclerAdapterView.Adapter) getAdapter();
+        fixedViews.add(view);
+        if (adapter != null) {
+            setAdapter(adapter);
+            adapter.notifyDataSetChanged();
+        }
+    }
+
+    private RecyclerAdapterView.Adapter wrapAdapterIfNeeded(Adapter adapter) {
+        if (!(adapter instanceof FixedViewRecyclerAdapter) && (getHeaderCount() != 0 || getFooterCount() != 0)) {
+            adapter = new FixedViewRecyclerAdapter(mContext, adapter, mHeaderViews, mFooterViews);
+            ((FixedViewRecyclerAdapter) adapter).registerWrapperDataObserver();
+        }
+
+        return adapter;
+    }
+
+    public void removeFooterView(final View view) {
+        removeFixedView(view, mFooterViews);
+    }
+
+    public void removeHeaderView(final View view) {
+        removeFixedView(view, mHeaderViews);
+    }
+
+    private void removeFixedView(final View v, final ArrayList<View> fixedViews) {
+        int size = fixedViews.size();
+        for (int i = 0; i < size; ++i) {
+            View view = fixedViews.get(i);
+            if (view == v) {
+                fixedViews.remove(i);
+                break;
+            }
+        }
+        final RecyclerAdapterView.Adapter adapter = (RecyclerAdapterView.Adapter) getAdapter();
+        if (adapter != null) {
+            adapter.notifyDataSetChanged();
+        }
+    }
+
+    private boolean isFixedView(final int position) {
+        boolean isHeaderView = false;
+        final RecyclerView.Adapter adapter = getAdapter();
+        if (adapter instanceof FixedViewRecyclerAdapter) {
+            isHeaderView = ((FixedViewRecyclerAdapter) adapter).isFixedView(position);
+        }
+        return isHeaderView;
+    }
+
 
     /*
      * **********************************************************************************
@@ -155,6 +270,12 @@ public class RecyclerAdapterView extends RecyclerView {
         public abstract Object getItem(int position);
 
         private RecyclerAdapterView mRecyclerAdapterView;
+
+
+        @Override
+        public void onBindViewHolder(VH holder, int position) {
+
+        }
 
         @Override
         public void onAttachedToRecyclerView(RecyclerView recyclerView) {
@@ -185,45 +306,40 @@ public class RecyclerAdapterView extends RecyclerView {
         }
     }
 
-    public static abstract class ViewHolder extends RecyclerView.ViewHolder {
+    public static class ViewHolder extends RecyclerView.ViewHolder {
 
         RecyclerAdapterView mRecyclerAdapterView;
 
-
         public ViewHolder(final View itemView) {
             super(itemView);
-
-
-            itemView.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View view) {
-
-                    if (mRecyclerAdapterView != null) {
-                        final int position = getAdapterPosition();
+            if (itemView != null) {
+                itemView.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
                         final long id = getItemId();
+                        int position = getAdapterPosition();
 
-                        mRecyclerAdapterView.getOnItemClickListener().onItemClick(null, view, position, id);
-
-//                        RecyclerEventBus.postItemClick(new RecyclerEventBus.ItemClickEvent(view, position, id));
+                        if (mRecyclerAdapterView != null && mRecyclerAdapterView.getOnItemClickListener() != null && !mRecyclerAdapterView.isFixedView(position)) {
+                            position -= mRecyclerAdapterView.getHeaderCount();
+                            mRecyclerAdapterView.getOnItemClickListener().onItemClick(null, view, position, id);
+                        }
                     }
-                }
-            });
+                });
 
-            itemView.setOnLongClickListener(new OnLongClickListener() {
-                @Override
-                public boolean onLongClick(View view) {
-                    if (mRecyclerAdapterView != null) {
-                        final int position = getAdapterPosition();
+                itemView.setOnLongClickListener(new OnLongClickListener() {
+                    @Override
+                    public boolean onLongClick(View view) {
                         final long id = getItemId();
+                        int position = getAdapterPosition();
 
-                        mRecyclerAdapterView.getOnItemLongClickListener().onItemLongClick(null, view, position, id);
-
-
-//                        RecyclerEventBus.postItemLongClick(new RecyclerEventBus.ItemLongClickEvent(view, position, id));
+                        if (mRecyclerAdapterView != null && mRecyclerAdapterView.getOnItemLongClickListener() != null && !mRecyclerAdapterView.isFixedView(position)) {
+                            position -= mRecyclerAdapterView.getHeaderCount();
+                            mRecyclerAdapterView.getOnItemLongClickListener().onItemLongClick(null, view, position, id);
+                        }
+                        return true;
                     }
-                    return true;
-                }
-            });
+                });
+            }
         }
     }
 }

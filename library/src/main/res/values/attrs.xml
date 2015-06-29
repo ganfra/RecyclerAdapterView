@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="RecyclerAdapterView">
+        <attr name="ListView_divider" format="integer"/>
+        <attr name="ListView_dividerHeight" format="integer"/>
+        <attr name="ListView_itemSelector" format="integer"/>
+    </declare-styleable>
+
+</resources>
